@@ -1,0 +1,3 @@
+# ignore downloaded files
+*.zip
+*.tar.gz
