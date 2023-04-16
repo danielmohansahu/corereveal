@@ -36,16 +36,16 @@ ENV GHIDRA_INSTALL_DIR /opt/ghidra_10.2.3_PUBLIC
 # install ghidrathon (Python3 Support for Ghidra)
 RUN wget -nv https://github.com/mandiant/Ghidrathon/archive/refs/tags/v2.0.1.zip && unzip v2.0.1.zip && rm v2.0.1.zip
 RUN cd Ghidrathon-2.0.1 && gradle -PGHIDRA_INSTALL_DIR=$GHIDRA_INSTALL_DIR -PPYTHON_BIN=$(which python3)
-RUN mv /opt/Ghidrathon-2.0.1/dist/*.zip $GHIDRA_INSTALL_DIR/Extensions/Ghidra/
 
 # install Qiling (Python Emulation Framework)
 RUN git clone -b 1.4.5 https://github.com/qilingframework/qiling.git
 RUN cd qiling && git submodule update --init --recursive && python3 -m pip install .
 
-# embed our script into the Ghidra directory
-COPY CoreReveal/corereveal.py $GHIDRA_INSTALL_DIR/Ghidra/Features/Python/ghidra_scripts/
+# move Ghidrathon extensions and our custom scripts into Ghidra installation (for easy access)
+RUN mv /opt/Ghidrathon-2.0.1/dist/*.zip $GHIDRA_INSTALL_DIR/Extensions/Ghidra/
+COPY CoreReveal/CoreReveal.py $GHIDRA_INSTALL_DIR/Ghidra/Features/Python/ghidra_scripts/
 
 # drop into an interactive shell
-WORKDIR /workspace
+WORKDIR /root/workspace
 CMD bash
 

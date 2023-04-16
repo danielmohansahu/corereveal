@@ -10,4 +10,4 @@ IMAGE=ghidra-development:latest
 docker build -t $IMAGE $SCRIPTPATH/
 
 # drop into a container
-rocker --x11 --volume $SCRIPTPATH:/workspace -- $IMAGE byobu
+rocker --x11 --volume $SCRIPTPATH:/root/workspace -- $IMAGE byobu
