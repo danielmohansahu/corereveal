@@ -1,9 +1,9 @@
 # corereveal
-Leveraging Qiling and Ghidra for binary analysis.
+Leveraging [Qiling](https://qiling.io/) and [Ghidra](https://ghidra-sre.org/) for binary analysis.
 
 ### Development Environment
 
-A Docker development environment is provided for those who wish to use it. Users should carefully weight the benefits of isolation vs. the pains of containerization before using it. Note that this assumes an existing Docker installation on a modern version of Ubuntu with common system tools installed.
+A [Docker](https://www.docker.com/) development environment is provided for those who wish to use it. Users should carefully weight the benefits of isolation vs. the pains of containerization before using it. Note that this assumes an existing Docker installation on a modern version of Ubuntu with common system tools installed.
 
 Docker installation verification:
 
