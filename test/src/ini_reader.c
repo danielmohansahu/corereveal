@@ -147,7 +147,7 @@ void deserialize(ini* ini, char* filepath)
     read(fd, buff, sizeof(char) * stat.st_size);
     pos = buff;
 
-    while(pos != buff+stat.st_size)
+    while(pos < buff+stat.st_size)
     {
         if (*pos == ';')
         {  
@@ -181,7 +181,6 @@ void deserialize(ini* ini, char* filepath)
             cur_section = (char*) malloc(sizeof(char) * length);
             heap_chk(cur_section); 
             strncpy(cur_section, pos+1, length);
-            
             add_section(ini, pos+1);
             pos = cur+1;
 
@@ -194,12 +193,44 @@ void deserialize(ini* ini, char* filepath)
         // start of a new key/value pair. Assumes a section has been declared
         else
         {
-            // TODO read until first space -> key
-            // should be followed by = thne another space
-            // read until newline -> value
+            char* key;
+            char* value;
+            unsigned int key_len;
+            unsigned int value_len;
+
+            // Read until first space
+            for(cur=pos; *cur != ' '; cur++){}
+            key_len = cur - pos;
+            *cur = '\0';
+            key = (char*) malloc(sizeof(char) * key_len);
+            heap_chk(key);
+            strncpy(key, pos, key_len);
+            pos = cur + 1;
+
+            // Skip Spaces and Equal Signs
+            for(cur=pos; *cur == ' ' || *cur == '=';  cur++){}
+            pos = cur;
+
+            // Read until Newline
+            for(cur=pos; *cur!='\n'; cur++){}
+            value_len = cur - pos;
+            *cur = '\0';
+            value = (char*) malloc(sizeof(char) * value_len);
+            heap_chk(value);
+            strncpy(value, pos, value_len);
+            pos = cur + 1;
+
+            add_data(ini, cur_section, key, value);
+
+            free(key);
+            free(value);
         }
     }
     
+    if(cur_section != NULL)
+    {
+        free(cur_section);
+    }
 
     close(fd);
 }
@@ -209,8 +240,6 @@ int main()
     ini ini_data;
     ini_data.sections = init_dict();
     deserialize(&ini_data, "test_config.ini");
-    // add_section(&ini_data, "test");
-    // add_data(&ini_data, "test", "harry", "potter");
-    // print_ini(&ini_data);
+    print_ini(&ini_data);
     return 0;
 }
