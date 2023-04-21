@@ -13,6 +13,9 @@ ini_reader:
 	$(CC) ini_reader.c $(CFLAGS) -o $(BIN)ini_reader
 	cp test_config.ini $(BIN)
 
-all: rng_guesser ini_reader
+sus:
+	$(CC) sus.c $(CFLAGS) -o $(BIN)sus
+
+all: rng_guesser ini_reader sus
 	
 	

@@ -235,11 +235,17 @@ void deserialize(ini* ini, char* filepath)
     close(fd);
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    if (argc == 1)
+    {
+        printf("USAGE: %s <INI_FILE>\n", argv[0]);
+        return 1;
+    }
+
     ini ini_data;
     ini_data.sections = init_dict();
-    deserialize(&ini_data, "test_config.ini");
+    deserialize(&ini_data, argv[1]);
     print_ini(&ini_data);
     return 0;
 }
