@@ -14,11 +14,11 @@ them all run `dir(builtins)`.
 # STL
 import sys
 
+# CoreReveal
+from corereveal.qiling_interface import QilingInterface
+
 # sanity check we're using Python3 (via Ghidrathon)
 assert sys.version_info > (3,0), "Incorrect Python version; do you have Ghidrathon installed?"
-
-# Qiling
-from qiling import Qiling
 
 if __name__ == "__main__":
     popup("Hello, World!")
