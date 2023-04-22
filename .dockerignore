@@ -1,0 +1,3 @@
+# ignore these files / directories in build context
+ghidra-project/
+build_and_run.sh
