@@ -20,9 +20,18 @@ assert sys.version_info > (3,0), "Incorrect Python version; do you have Ghidrath
 
 # Ghidra
 from ghidra.program.flatapi import FlatProgramAPI
+from ghidra.program.model.block import BasicBlockModel
+from ghidra.util.task import ConsoleTaskMonitor
 
 # CoreReveal
 from corereveal.qiling_interface import QilingInterface
+
+########## TEMPORARY TESTING - @TODO REMOVE ##########
+from corereveal.mock_qiling_interface import MockQilingInterface
+######################################################
+
+# Hardcoded global variables - @TODO remove the need for this
+FUNCTION = "main"
 
 def annotate_bss(api, variables: dict):
     """ Add annotations to the current program detailing BSS values. """
@@ -44,11 +53,23 @@ if __name__ == "__main__":
     
     # construct basic ghidra program objects
     program = getState().getCurrentProgram()
+    block_model = BasicBlockModel(program)
     ghidra_api = FlatProgramAPI(program)
+    monitor = ConsoleTaskMonitor()
+    main_function = getGlobalFunctions(FUNCTION)[0]
 
     # construct core interface class
     # @TODO determine which program details (e.g. endianess) we need to / should send
-    interface = QilingInterface(program.getExecutablePath(), program.getLanguage().toString())
+    # interface = QilingInterface(program.getExecutablePath(), program.getLanguage().toString())
+
+    ########## TEMPORARY TESTING - @TODO REMOVE ##########
+    interface = MockQilingInterface(
+        program.getExecutablePath(),
+        program.getLanguage().toString(),
+        None,
+        None
+    )
+    ######################################################
 
     # prompt for user input
     cli_args = askString(f"Executing {program.toString()}", "Command Line Arguments")
