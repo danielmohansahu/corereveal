@@ -1,0 +1,38 @@
+[build-system]
+requires = [
+  "hatchling",
+  "qiling",
+  "pylint"
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "corereveal"
+version = "0.0.1"
+authors = [
+  { name="Daniel M. Sahu", email="dsahu@fake.com" },
+  { name="Brandon Wong", email="todo@fake.com" },
+]
+description = "CoreReveal - Qiling emulation embedded in Ghidra."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/danielmohansahu/corereveal"
+"Bug Tracker" = "https://github.com/danielmohansahu/corereveal/issues"
+
+[tool.pylint.messages_control]
+disable = [
+  # ignore CONVENTION / REFACTORING / WARNING checks
+  "C",
+  "R",
+  # @TODO re-enable some of these!
+  "bad-indentation",
+  "unused-argument",
+  "unused-import"
+]
