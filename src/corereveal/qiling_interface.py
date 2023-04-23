@@ -12,20 +12,20 @@ which accomplishes the following functions:
 
 # STL
 from typing import Callable
-from dataclasses import dataclass
+import dataclasses
 
 # Qiling
 from qiling import Qiling
 
-
-
-
 # data structure of results from Qiling
-@dataclass
+@dataclasses.dataclass
 class EmulationResults:
-  blocks:           list = field(default_factory=list) # basic blocks encountered [(address, name)]
-  static_variables: dict = field(default_factory=dict) # static variable values {variable : [values]}
-  posix_calls:      dict = field(default_factory=dict) # arguments to posix calls {call : [(arg1, arg2, ..., argN)] }
+  # basic blocks encountered [(address, name)]
+  blocks:           list = dataclasses.field(default_factory=list)
+  # static variable values {variable : [values]}
+  static_variables: dict = dataclasses.field(default_factory=dict)
+  # arguments to posix calls {call : [(arg1, arg2, ..., argN)] }
+  posix_calls:      dict = dataclasses.field(default_factory=dict)
 
 class QilingInterface:
   """ Core Qiling Interface Class """
