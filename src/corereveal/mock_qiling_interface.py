@@ -12,15 +12,21 @@ from typing import Callable
 # CoreReveal
 from .qiling_interface import QilingInterface, EmulationResults
 
+def generate_random_addresses(start: str, end_offset: int = 2048, count: int = 150):
+    """ Generate 'count' random addresses in the range ['start', 'start' + 'end_offset'] """
+    begin = int(start, 16)
+    end = begin + end_offset
+    return [hex(address) for address in random.choices(range(begin, end), k=count)]
+
 class MockQilingInterface:
     """ Mock QilingInterface class, for testing and development. """
-    def __init__(self, program, metadata, blocks, static_variables):
+    def __init__(self, program, metadata, start_address, static_variables):
         """ Mock initialization takes the same arguments as the core class
             as well as some Ghidra-supplied program info.
         """
         self.program  = program
         self.metadata = metadata
-        self.blocks = blocks
+        self.start_address = start_address
         self.static_variables = static_variables
 
     def emulate(self, args: str, stdin_cb: Callable, stdout_cb: Callable) -> EmulationResults:
@@ -28,7 +34,7 @@ class MockQilingInterface:
 
         # determine duration
         duration = random.random() * 10
-        
+
         # 50/50 chance of prompting for user input right off the bat
         if random.random() > 0.5:
             stdin_cb("How are you feeling?")
@@ -56,5 +62,8 @@ class MockQilingInterface:
         # otherwise, populate random results
         results = EmulationResults()
 
-        # @TODO populate
+        # get random address after our start address
+        results.block_addresses = generate_random_addresses(self.start_address)
+
+        # @TODO populate syscall information and comments
         return results
