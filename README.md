@@ -20,9 +20,10 @@ python3 -m pip install rocker
 
 **Instructions:**
 1. Build Docker image and drop into an interactive container via `./build_and_run.sh`
-2. Run Ghidra via `ghidraRun` and install Ghidrathon extension. Restart.
-3. (optional, per-project): Run Ghidra via `ghidraRun` and disable native (Jython) Python support. Restart.
-4. (optional): `docker commit` the modified container so you don't need to repeat these steps on every restart.
+2. Start Ghidra via `ghidraRun`
+3. (one-time-only) install Ghidrathon extension; restart
+4. (one-time-only) disable native (Jython) Python support; restart
+5. Open a project and begin analysis
 
 Initial Configuration | Script Execution
 --- | ---
