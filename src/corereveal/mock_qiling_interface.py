@@ -48,14 +48,14 @@ class MockQilingInterface:
                 stdin_cb("Please provide additional input")
             
             # it's more likely that we just spam 
-            if random.random() > 0.5:
+            if random.random() > 0.75:
                 stdout_cb("SPAM!")
             
             # sleep
             time.sleep(random.random())
 
         # there's a small chance emulation failed
-        if random.random() < 0.2:
+        if random.random() < 0.05:
             stdout_cb("SEGFAULT")
             return None
         

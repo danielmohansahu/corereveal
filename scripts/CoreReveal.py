@@ -22,6 +22,7 @@ assert sys.version_info > (3,0), "Incorrect Python version; do you have Ghidrath
 from ghidra.program.flatapi import FlatProgramAPI
 from ghidra.util.task import ConsoleTaskMonitor
 from ghidra.program.model.address import AddressSet
+from ghidra.app.util import CodeUnitInfo
 from java.awt import Color
 
 # CoreReveal
@@ -34,22 +35,28 @@ from corereveal.mock_qiling_interface import MockQilingInterface
 # Hardcoded global variables
 BACKGROUND_COLOR = Color.PINK
 
-def annotate_bss(api, variables: dict):
+def annotate_bss(api, program, variables: dict):
     """ Add annotations to the current program detailing BSS values. """
     # @TODO!
 
-def annotate_posix_calls(api, posix_calls: dict):
+def annotate_posix_calls(api, program, posix_calls: dict):
     """ Add annotations to the current program detailing POSIX call arguments. """
     # @TODO!
 
 def color_function_graph(api, program, blocks: list):
     """ Highlight the blocks encountered and display the Function Graph. """
+    # get program listing for commenting
+    listing = program.getListing()
+
     # convert list of address strings to address objects
     start = program.getMinAddress()
     for string in blocks:
         if address := start.getAddress(string):
             # address found; set background
             setBackgroundColor(address, BACKGROUND_COLOR)
+            # add a comment too, if this is a valid CodeUnit
+            if code_unit := listing.getCodeUnitAt(address):
+                code_unit.setComment(code_unit.PLATE_COMMENT, f"Background color set by CoreReveal")
         else:
             popup(f"Skipping invalid address {string}!")
 
@@ -97,8 +104,8 @@ if __name__ == "__main__":
     print(f"Emulation succeeded; post-processing...")
 
     # format output and visualize
-    annotate_bss(ghidra_api, res.static_variables)
-    annotate_posix_calls(ghidra_api, res.posix_calls)
+    annotate_bss(ghidra_api, program, res.static_variables)
+    annotate_posix_calls(ghidra_api, program, res.posix_calls)
     color_function_graph(ghidra_api, program, res.block_addresses)
 
     print(f"Success!")
