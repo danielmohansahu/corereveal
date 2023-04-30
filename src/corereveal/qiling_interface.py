@@ -21,7 +21,7 @@ from qiling import Qiling
 @dataclasses.dataclass
 class EmulationResults:
   # basic blocks encountered [(address, name)]
-  blocks:           list = dataclasses.field(default_factory=list)
+  block_addresses:  list = dataclasses.field(default_factory=list)
   # static variable values {variable : [values]}
   static_variables: dict = dataclasses.field(default_factory=dict)
   # arguments to posix calls {call : [(arg1, arg2, ..., argN)] }
