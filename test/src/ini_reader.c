@@ -60,10 +60,10 @@ int insert_entry(dict* d, char* key, void* value, int value_size)
 {
     dict_entry* entry = (dict_entry*) malloc(sizeof(dict_entry));
     heap_chk(entry);
-    int key_len = strlen(key) + 1;
-    entry->key = (char*) malloc(key_len);
+    int key_len = strlen(key);
+    entry->key = (char*) calloc(key_len+1, sizeof(char));
     heap_chk(entry->key);
-    entry->value = (void*) malloc(value_size);
+    entry->value = (void*) calloc(value_size+1, sizeof(char));
     heap_chk(entry->value);
 
     strncpy(entry->key, key, key_len);
@@ -202,9 +202,10 @@ void deserialize(ini* ini, char* filepath)
             for(cur=pos; *cur != ' '; cur++){}
             key_len = cur - pos;
             *cur = '\0';
-            key = (char*) malloc(sizeof(char) * key_len);
+            key = (char*) malloc(sizeof(char) * key_len + 1);
             heap_chk(key);
             strncpy(key, pos, key_len);
+            key[key_len] = '\0';
             pos = cur + 1;
 
             // Skip Spaces and Equal Signs
@@ -215,9 +216,10 @@ void deserialize(ini* ini, char* filepath)
             for(cur=pos; *cur!='\n'; cur++){}
             value_len = cur - pos;
             *cur = '\0';
-            value = (char*) malloc(sizeof(char) * value_len);
+            value = (char*) malloc(sizeof(char) * value_len + 1);
             heap_chk(value);
             strncpy(value, pos, value_len);
+            value[value_len] = '\0';
             pos = cur + 1;
 
             add_data(ini, cur_section, key, value);
