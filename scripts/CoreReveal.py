@@ -43,7 +43,7 @@ def annotate_posix_calls(api, program, posix_calls: dict):
     """ Add annotations to the current program detailing POSIX call arguments. """
     # @TODO!
 
-def color_function_graph(api, program, blocks: list):
+def color_function_graph(api, program, blocks: set):
     """ Highlight the blocks encountered and display the Function Graph. """
     # get program listing for commenting
     listing = program.getListing()
@@ -51,12 +51,13 @@ def color_function_graph(api, program, blocks: list):
     # convert list of address strings to address objects
     start = program.getMinAddress()
     for string in blocks:
-        if address := start.getAddress(string):
+        if address := start.getAddress(str(string)):
             # address found; set background
             setBackgroundColor(address, BACKGROUND_COLOR)
             # add a comment too, if this is a valid CodeUnit
             if code_unit := listing.getCodeUnitAt(address):
                 code_unit.setComment(code_unit.PLATE_COMMENT, f"Background color set by CoreReveal")
+            print(f"Colored {string}")
         else:
             popup(f"Skipping invalid address {string}!")
 
@@ -72,30 +73,24 @@ if __name__ == "__main__":
     monitor = ConsoleTaskMonitor()
     print(f"Emulating {program.getExecutablePath()} with Qiling...")
 
-    # construct core interface class
-    # @TODO determine which program details (e.g. endianess) we need to / should send
-    # interface = QilingInterface(program.getExecutablePath(), program.getLanguage().toString())
-
-    ########## TEMPORARY TESTING - @TODO REMOVE ##########
-    interface = MockQilingInterface(
-        program.getExecutablePath(),
-        program.getLanguage().toString(),
-        program.getMinAddress().toString(),
-        None
-    )
-    ######################################################
-
     # prompt for user input
     cli_args = askString(f"Executing {program.getExecutablePath()}", "Command Line Arguments")
+
+    # construct core interface class
+    interface = QilingInterface(
+        program.getExecutablePath(),
+        cli_args,
+        program.getMetadata().get("Processor"),
+        program.getMetadata().get("Address Size"),
+        "linux",
+        lambda prompt: askString("STDIN", prompt),
+        lambda output: popup(output)
+    )
 
     # perform emulation
     # @TODO update system monitor with progress bar
     print(f"Running emulation...")
-    res = interface.emulate(
-        cli_args,
-        lambda prompt: askString("STDIN", prompt),
-        lambda output: popup(output)
-    )
+    res = interface.emulate()
 
     # handle failure conditions
     if not res:
