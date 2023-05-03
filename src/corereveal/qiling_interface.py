@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Callable
 import dataclasses
 
-# Unicorn
-from unicorn import UcError
+# Capstone
+from capstone import Cs, CS_MODE_ARM, CS_ARCH_ARM, CS_ARCH_X86, CS_MODE_64
 
 # Qiling
 from qiling import Qiling
@@ -53,7 +53,7 @@ class EmulationResults:
 class QilingInterface:
   """ Core Qiling Interface Class """
 
-  def __init__(self, program: str, bss_offset:int, bss_size:int, stdin_cb: Callable[[], bytes]=None, stdout_cb: Callable[[bytes], None]=None):
+  def __init__(self, program: str, bss_offset:int, bss_size:int, ghidra_base: int, stdin_cb: Callable[[], bytes]=None, stdout_cb: Callable[[bytes], None]=None):
     """ Setup and initialization of underlying Qiling environment.
 
     :param program:     Full path to the program to execute.
@@ -64,11 +64,12 @@ class QilingInterface:
     """
 
     # save class variables
-    self.binary    = program
-    self.bss_addr  = bss_offset
-    self.bss_size  = bss_size
-    self.stdin_cb  = stdin_cb
-    self.stdout_cb = stdout_cb
+    self.binary      = program
+    self.bss_addr    = bss_offset
+    self.bss_size    = bss_size
+    self.stdin_cb    = stdin_cb
+    self.stdout_cb   = stdout_cb
+    self.ghidra_base = ghidra_base
 
     # initialize other class variables
     self.rootfs  = None
@@ -160,11 +161,9 @@ class QilingInterface:
           basic blocks from libc or ld.
     '''
     assert (self.results is not None), "Emulation setup failed."
-
     if self.base_address <= address <= self.addr_uppr_bnd:
-      # print("\n[+] Tracing basic block at 0x%x" % (address))
-      self.results.block_addresses.add(address)
-      
+      self.results.block_addresses.add(hex(address - self.base_address + self.ghidra_base))
+
   def _ql_hook_bss(self, ql, access, address, size, value):
     """ Memory writes in BSS section callback.
     """

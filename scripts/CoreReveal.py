@@ -28,10 +28,6 @@ from java.awt import Color
 # CoreReveal
 from corereveal.qiling_interface import QilingInterface
 
-########## TEMPORARY TESTING - @TODO REMOVE ##########
-from corereveal.mock_qiling_interface import MockQilingInterface
-######################################################
-
 # Hardcoded global variables
 BACKGROUND_COLOR = Color.PINK
 
@@ -50,16 +46,16 @@ def color_function_graph(api, program, blocks: set):
 
     # convert list of address strings to address objects
     start = program.getMinAddress()
-    for string in blocks:
-        if address := start.getAddress(str(string)):
+    for hex_str in blocks:
+        if address := start.getAddress(hex_str):
             # address found; set background
             setBackgroundColor(address, BACKGROUND_COLOR)
             # add a comment too, if this is a valid CodeUnit
             if code_unit := listing.getCodeUnitAt(address):
                 code_unit.setComment(code_unit.PLATE_COMMENT, f"Background color set by CoreReveal")
-            print(f"Colored {string}")
+            print(f"Colored {hex_str}")
         else:
-            popup(f"Skipping invalid address {string}!")
+            popup(f"Skipping invalid address {hex_str}!")
 
 if __name__ == "__main__":
     # sanity check
@@ -78,6 +74,7 @@ if __name__ == "__main__":
         program.getExecutablePath(),
         0,
         0,
+        int(program.getMetadata().get("Minimum Address"), 16),
         lambda prompt: askString("STDIN", prompt),
         lambda output: popup(output)
     )
