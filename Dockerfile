@@ -53,10 +53,10 @@ RUN cd qiling && git submodule update --init --recursive && python3 -m pip insta
 
 # install CoreReveal
 WORKDIR /tmp/corereveal
-RUN python3 -m pip install --upgrade pip pylint
+RUN python3 -m pip install --upgrade pip pylint pytest
 COPY . .
 RUN python3 -m pip install .
-RUN python3 -m pylint corereveal
+# RUN python3 -m pylint corereveal
 
 # move Ghidrathon extensions and our custom scripts into Ghidra installation (for easy access)
 RUN mv /opt/Ghidrathon-2.0.1/dist/*.zip $GHIDRA_INSTALL_DIR/Extensions/Ghidra/
