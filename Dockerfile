@@ -23,6 +23,7 @@ RUN mkdir arm64 && debootstrap --foreign --arch arm64 stable arm64
 RUN mkdir mips && debootstrap --foreign --arch mipsel stable mips
 RUN mkdir mips64 && debootstrap --foreign --arch mips64el stable mips64
 RUN mkdir ppc64 && debootstrap --foreign --arch ppc64el stable ppc64
+RUN mkdir x8664 && debootstrap --foreign --arch amd64 stable x8664
 
 # change working dir for installation of downloadable packages
 WORKDIR /opt
