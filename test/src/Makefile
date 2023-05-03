@@ -17,5 +17,8 @@ sus:
 	$(CC) sus.c $(CFLAGS) -o $(BIN)sus
 
 all: rng_guesser ini_reader sus
-	
+	mkdir -p $(BIN)/lib
+	mkdir -p $(BIN)/lib64
+	cp /lib/x86_64-linux-gnu/libc.so.6 $(BIN)/lib
+	cp /lib64/ld-linux-x86-64.so.2 $(BIN)/lib64
 	
