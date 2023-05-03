@@ -73,24 +73,28 @@ if __name__ == "__main__":
     monitor = ConsoleTaskMonitor()
     print(f"Emulating {program.getExecutablePath()} with Qiling...")
 
-    # prompt for user input
-    cli_args = askString(f"Executing {program.getExecutablePath()}", "Command Line Arguments")
-
     # construct core interface class
     interface = QilingInterface(
         program.getExecutablePath(),
-        cli_args,
-        program.getMetadata().get("Processor"),
-        program.getMetadata().get("Address Size"),
-        "linux",
+        0,
+        0,
         lambda prompt: askString("STDIN", prompt),
         lambda output: popup(output)
     )
 
+    # set root filesystem (provided by Qiling)
+    interface.set_default_rootfs(
+        program.getMetadata().get("Processor"),
+        program.getMetadata().get("Address Size")
+    )
+
+    # prompt for user input
+    cli_args = askString(f"Executing {program.getExecutablePath()}", "Command Line Arguments")
+
     # perform emulation
     # @TODO update system monitor with progress bar
     print(f"Running emulation...")
-    res = interface.emulate()
+    res = interface.emulate(cli_args)
 
     # handle failure conditions
     if not res:

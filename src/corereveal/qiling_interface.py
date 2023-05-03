@@ -20,7 +20,7 @@ from unicorn import UcError
 
 # Qiling
 from qiling import Qiling
-from qiling.const import QL_VERBOSE, QL_INTERCEPT, QL_ARCH, QL_OS
+from qiling.const import QL_VERBOSE, QL_INTERCEPT, QL_ARCH
 from qiling.extensions import pipe
 
 # hardcoded path to qiling rootfs - assuming x8664 linux for now
@@ -116,7 +116,7 @@ class QilingInterface:
 
     # construct core qiling object
     argv = [self.binary] + args.split()
-    self.ql = Qiling(argv, self.rootfs=rootfs.as_posix(), verbose=QL_VERBOSE.DEBUG)
+    self.ql = Qiling(argv, self.rootfs.as_posix(), verbose=QL_VERBOSE.DEBUG)
 
     # @TODO take over STDIN / STDOUT
     # self.ql.os.stdin = pipe.SimpleInStream(sys.stdin.fileno())  # take over the input to the program using a fake stdin
@@ -152,22 +152,28 @@ class QilingInterface:
     return self.results
   
   def _ql_hook_block_disasm(self, ql, address, size):
-    '''
-    Constraint functionality based on whether or not the basic blocks' address is in the loaded program's address space.
-    Otherwise we'd get basic blocks from libc or ld
+    ''' Basic Block entry callback.
+
+    Note: We constrain functionality based on whether or not the basic block's
+          address is in the loaded program's address space. Otherwise we'd get
+          basic blocks from libc or ld.
     '''
     assert (self.results is not None), "Emulation setup failed."
 
-    if address > self.base_address and address < self.addr_uppr_bnd:
+    if self.base_address <= address <= self.addr_uppr_bnd:
       # print("\n[+] Tracing basic block at 0x%x" % (address))
       self.results.block_addresses.add(address)
       
   def _ql_hook_bss(self, ql, access, address, size, value):
+    """ Memory writes in BSS section callback.
+    """
     assert (self.results is not None), "Emulation setup failed."
     # TODO
     pass
 
   def _ql_syscall_openat(self, ql, dirfd:int, pathname:str, flags:int, mode:int, ret):
+    """ POSIX syscall callback.
+    """
     assert (self.results is not None), "Emulation setup failed."
     # IPython.embed()
     # TODO
