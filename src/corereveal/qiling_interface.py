@@ -118,7 +118,7 @@ class QilingInterface:
     # construct core qiling object
     argv = [self.binary] + args.split()
     print(f"Executing `{' '.join(argv)}` with rootfs {self.rootfs.as_posix()}")
-    self.ql = Qiling(argv, self.rootfs.as_posix(), verbose=QL_VERBOSE.DEBUG)
+    self.ql = Qiling(argv, self.rootfs.as_posix(), console=False, log_plain=True)
 
     # @TODO take over STDIN / STDOUT
     # self.ql.os.stdin = pipe.SimpleInStream(sys.stdin.fileno())  # take over the input to the program using a fake stdin

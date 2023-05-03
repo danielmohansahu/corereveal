@@ -14,9 +14,13 @@ them all run `dir(builtins)`.
 
 # STL
 import sys
+import importlib
 
 # sanity check we're using Python3 (via Ghidrathon)
 assert sys.version_info > (3,0), "Incorrect Python version; do you have Ghidrathon installed?"
+
+# CoreReveal
+from corereveal.qiling_interface import QilingInterface
 
 # Ghidra
 from ghidra.program.flatapi import FlatProgramAPI
@@ -25,8 +29,21 @@ from ghidra.program.model.address import AddressSet
 from ghidra.app.util import CodeUnitInfo
 from java.awt import Color
 
-# CoreReveal
-from corereveal.qiling_interface import QilingInterface
+# don't let ghidrathon screw things up
+sys.stdout.fileno = lambda: 1
+sys.stderr.fileno = lambda: 2
+
+# def corereveal_import_module(components, package=""):
+#     module = __import__(f"{package}{components}")
+#     result = module
+#     components = components.split(".")
+#     if package == "":
+#         components.pop(0)
+#     for comp in components:
+#         if comp != "":
+#             result = getattr(result, comp)
+#     return result
+# importlib.import_module = corereveal_import_module
 
 # Hardcoded global variables
 BACKGROUND_COLOR = Color.PINK
@@ -80,10 +97,11 @@ if __name__ == "__main__":
     )
 
     # set root filesystem (provided by Qiling)
-    interface.set_default_rootfs(
-        program.getMetadata().get("Processor"),
-        program.getMetadata().get("Address Size")
-    )
+    # interface.set_default_rootfs(
+    #     program.getMetadata().get("Processor"),
+    #     program.getMetadata().get("Address Size")
+    # )
+    interface.set_rootfs("/root/workspace/test/bin/")
 
     # prompt for user input
     cli_args = askString(f"Executing {program.getExecutablePath()}", "Command Line Arguments")
