@@ -24,7 +24,7 @@ from qiling.const import QL_VERBOSE, QL_INTERCEPT, QL_ARCH
 from qiling.extensions import pipe
 
 # hardcoded path to qiling rootfs - assuming x8664 linux for now
-ROOTFS_ROOT = Path("/opt/qiling/examples/rootfs")
+ROOTFS_ROOT = Path("/mnt/rootfs")
 
 class BasicBlock:
   def __init__(self, addr:int, size:int):
@@ -82,7 +82,7 @@ class QilingInterface:
     self.rootfs = Path(rootfs)
     assert self.rootfs.is_dir(), f"Failed to locate required root filesystem '{self.rootfs.as_posix()}'"
 
-  def set_default_rootfs(self, arch: str, address_size: str, os: str):
+  def set_default_rootfs(self, arch: str, address_size: str, os: str="linux"):
     """ Use a pre-installed rootfs (provided by qiling).
     
     :param arch:         Architecture of program to emulate.
@@ -90,14 +90,14 @@ class QilingInterface:
     :param os:           Operating system of program to emulate.
     """
     # verify input operating system / arch
-    assert hasattr(QL_OS, os.upper()), f"Unsupported operating system '{os}'; options are {QL_OS}"
+    assert (os.lower() == "linux"), f"Unsupported operating system '{os}'; options are 'linux'"
     assert hasattr(QL_ARCH, arch.upper()), f"Unsupported architecture '{arch}'; options are {QL_ARCH}"
   
     # access base rootfs - note the convention differences between Ghidra and Qiling
     if int(address_size) == 64:
-      self.rootfs = ROOTFS_ROOT / f"{arch.lower()}{address_size.lower()}_{os.lower()}"
+      self.rootfs = ROOTFS_ROOT / f"{arch.lower()}{address_size}"
     else:
-      self.rootfs = ROOTFS_ROOT / f"{arch.lower()}_{os.lower()}"
+      self.rootfs = ROOTFS_ROOT / f"{arch.lower()}"
     assert self.rootfs.is_dir(), f"Failed to locate required root filesystem '{self.rootfs.as_posix()}'"
   
   def emulate(self, args:str="") -> EmulationResults:
