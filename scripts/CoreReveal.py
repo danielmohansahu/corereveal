@@ -1,5 +1,5 @@
 # CoreReveal - Qiling based program flow emulation and visualization.
-"""CoreReveal - Ghidrathon based Ghidra script that executes and analyzes a Qiling emulation.
+"""CoreReveal - Jython Ghidra script that executes and analyzes a Qiling emulation.
 
 CoreReveal performs emulation via Qiling and analyzes the program flow.
 The results are plotted to give a top level overview of the program
@@ -14,13 +14,13 @@ them all run `dir(builtins)`.
 
 # STL
 import sys
-import importlib
+import subprocess
 
 # sanity check we're using Python3 (via Ghidrathon)
-assert sys.version_info > (3,0), "Incorrect Python version; do you have Ghidrathon installed?"
+assert sys.version_info < (3,0), "Incorrect Python version; expected Jython (2.7)."
 
 # CoreReveal
-from corereveal.qiling_interface import QilingInterface
+from corereveal.types import EmulationResults
 
 # Ghidra
 from ghidra.program.flatapi import FlatProgramAPI
@@ -29,34 +29,19 @@ from ghidra.program.model.address import AddressSet
 from ghidra.app.util import CodeUnitInfo
 from java.awt import Color
 
-# don't let ghidrathon screw things up
-sys.stdout.fileno = lambda: 1
-sys.stderr.fileno = lambda: 2
-
-# def corereveal_import_module(components, package=""):
-#     module = __import__(f"{package}{components}")
-#     result = module
-#     components = components.split(".")
-#     if package == "":
-#         components.pop(0)
-#     for comp in components:
-#         if comp != "":
-#             result = getattr(result, comp)
-#     return result
-# importlib.import_module = corereveal_import_module
-
 # Hardcoded global variables
 BACKGROUND_COLOR = Color.PINK
+OUTPUT = "/tmp/results.pickel"
 
-def annotate_bss(api, program, variables: dict):
+def annotate_bss(program, variables: dict):
     """ Add annotations to the current program detailing BSS values. """
     # @TODO!
 
-def annotate_posix_calls(api, program, posix_calls: dict):
+def annotate_posix_calls(program, posix_calls: dict):
     """ Add annotations to the current program detailing POSIX call arguments. """
     # @TODO!
 
-def color_function_graph(api, program, blocks: set):
+def color_function_graph(program, blocks: set, offset: int):
     """ Highlight the blocks encountered and display the Function Graph. """
     # get program listing for commenting
     listing = program.getListing()
@@ -64,15 +49,18 @@ def color_function_graph(api, program, blocks: set):
     # convert list of address strings to address objects
     start = program.getMinAddress()
     for hex_str in blocks:
-        if address := start.getAddress(hex_str):
+        # offset string by ghidra's "entry point"
+        address = start.getAddress(hex(int(hex_str, 16) + offset))
+        if address:
             # address found; set background
             setBackgroundColor(address, BACKGROUND_COLOR)
             # add a comment too, if this is a valid CodeUnit
-            if code_unit := listing.getCodeUnitAt(address):
-                code_unit.setComment(code_unit.PLATE_COMMENT, f"Background color set by CoreReveal")
-            print(f"Colored {hex_str}")
+            code_unit = listing.getCodeUnitAt(address)
+            if code_unit:
+                code_unit.setComment(code_unit.PLATE_COMMENT, "Background color set by CoreReveal")
+            print("Colored {}".format(hex_str))
         else:
-            popup(f"Skipping invalid address {hex_str}!")
+            popup("Skipping invalid address {}!".format(hex_str))
 
 if __name__ == "__main__":
     # sanity check
@@ -82,44 +70,33 @@ if __name__ == "__main__":
     
     # construct basic ghidra program objects
     program = getState().getCurrentProgram()
-    ghidra_api = FlatProgramAPI(program)
     monitor = ConsoleTaskMonitor()
-    print(f"Emulating {program.getExecutablePath()} with Qiling...")
 
-    # construct core interface class
-    interface = QilingInterface(
-        program.getExecutablePath(),
-        0,
-        0,
-        int(program.getMetadata().get("Minimum Address"), 16),
-        lambda prompt: askString("STDIN", prompt),
-        lambda output: popup(output)
-    )
-
-    # set root filesystem (provided by Qiling)
-    # interface.set_default_rootfs(
-    #     program.getMetadata().get("Processor"),
-    #     program.getMetadata().get("Address Size")
-    # )
-    interface.set_rootfs("/root/workspace/test/bin/")
+    # extract current program metadata
+    binary = program.getExecutablePath()
+    mem_offset = int(program.getMetadata().get("Minimum Address"), 16)
 
     # prompt for user input
-    cli_args = askString(f"Executing {program.getExecutablePath()}", "Command Line Arguments")
+    print("Emulating {} with Qiling...".format(binary))
+    cli_args = askString("Executing {}".format(binary), "Command Line Arguments")
 
-    # perform emulation
-    # @TODO update system monitor with progress bar
-    print(f"Running emulation...")
-    res = interface.emulate(cli_args)
+    # set up subprocess call arguments
+    cmd = "corereveal {} --args {} --arch {} --bss-size {} --bss-offset {} --output {}".format(binary, cli_args, "UNKNOWN", 0, 0, OUTPUT)
+    print("Running command: \n  {}".format(cmd))
+    code = subprocess.call(cmd, shell=True)
 
     # handle failure conditions
-    if not res:
+    if code != 0:
        popup("Emulation failed!")
-       sys.exit(2)
-    print(f"Emulation succeeded; post-processing...")
+       sys.exit(code)
+
+    # otherwise parse output
+    print("Emulation succeeded; post-processing...")
+    results = EmulationResults()
+    results.from_file(OUTPUT)
 
     # format output and visualize
-    annotate_bss(ghidra_api, program, res.static_variables)
-    annotate_posix_calls(ghidra_api, program, res.posix_calls)
-    color_function_graph(ghidra_api, program, res.block_addresses)
-
-    print(f"Success!")
+    annotate_bss(program, res.static_variables)
+    annotate_posix_calls(program, res.posix_calls)
+    color_function_graph(program, res.block_addresses, mem_offset)
+    print("Success!")
