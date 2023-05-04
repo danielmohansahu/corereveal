@@ -33,20 +33,11 @@ RUN wget -nv https://services.gradle.org/distributions/gradle-8.0.2-bin.zip --ou
 RUN unzip gradle-8.0.2-bin.zip && rm gradle-8.0.2-bin.zip
 RUN ln -s /opt/gradle-8.0.2/bin/gradle /usr/local/bin/gradle
 
-# install eclipse (Ghidra recommended IDE)
-RUN wget -nv https://mirrors.jevincanders.net/eclipse/technology/epp/downloads/release/2023-03/R/eclipse-java-2023-03-R-linux-gtk-x86_64.tar.gz --output-document eclipse-java-2023-03-R-linux-gtk-x86_64.tar.gz
-RUN tar -xzf eclipse-java-2023-03-R-linux-gtk-x86_64.tar.gz && rm eclipse-java-2023-03-R-linux-gtk-x86_64.tar.gz
-RUN ln -s /opt/eclipse/eclipse /usr/local/bin/eclipse
-
 # install ghidra (Reverse Engineering tool)
 RUN wget -nv https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.2.3_build/ghidra_10.2.3_PUBLIC_20230208.zip --output-document ghidra_10.2.3_PUBLIC_20230208.zip
 RUN unzip ghidra_10.2.3_PUBLIC_20230208.zip && rm ghidra_10.2.3_PUBLIC_20230208.zip
 RUN ln -s /opt/ghidra_10.2.3_PUBLIC/ghidraRun /usr/local/bin/ghidraRun
 ENV GHIDRA_INSTALL_DIR /opt/ghidra_10.2.3_PUBLIC
-
-# install ghidrathon (Python3 Support for Ghidra)
-RUN wget -nv https://github.com/mandiant/Ghidrathon/archive/refs/tags/v2.1.0.zip && unzip v2.1.0.zip && rm v2.1.0.zip
-RUN cd Ghidrathon-2.1.0 && gradle -PGHIDRA_INSTALL_DIR=$GHIDRA_INSTALL_DIR -PPYTHON_BIN=$(which python3)
 
 # install Qiling (Python Emulation Framework)
 RUN git clone -b 1.4.5 https://github.com/qilingframework/qiling.git
@@ -60,8 +51,8 @@ RUN python3 -m pip install .
 # RUN python3 -m pylint corereveal
 
 # move Ghidrathon extensions and our custom scripts into Ghidra installation (for easy access)
-RUN mv /opt/Ghidrathon-2.1.0/dist/*.zip $GHIDRA_INSTALL_DIR/Extensions/Ghidra/
 COPY scripts/CoreReveal.py $GHIDRA_INSTALL_DIR/Ghidra/Features/Python/ghidra_scripts/
+COPY src/corereveal/corereveal_types.py $GHIDRA_INSTALL_DIR/Ghidra/Features/Python/ghidra_scripts/
 
 # drop into an interactive shell
 WORKDIR /root/workspace

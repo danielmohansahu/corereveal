@@ -21,7 +21,7 @@ from qiling.const import QL_VERBOSE, QL_INTERCEPT
 from qiling.extensions import pipe
 
 # CoreReveal
-from .types import EmulationResults
+from .corereveal_types import EmulationResults
 
 class BasicBlock:
   def __init__(self, addr:int, size:int):

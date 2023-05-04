@@ -18,7 +18,7 @@ class EmulationResults:
     # arguments to posix calls
     self.posix_calls = dict()
 
-  def to_file(self, filename : str):
+  def to_file(self, filename):
     """ Serialize to a pickle file. """
     with open(filename, "wb") as picklefile:
       data = {"block_addresses" : self.block_addresses,
@@ -26,7 +26,7 @@ class EmulationResults:
               "posix_calls" : self.posix_calls}
       pickle.dump(data, picklefile, pickle.HIGHEST_PROTOCOL)
 
-  def from_file(self, filename : str):
+  def from_file(self, filename):
     """ Deserialize from a pickle file. """
     with open(filename, "rb") as picklefile:
       data = pickle.load(picklefile)

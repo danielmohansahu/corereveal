@@ -18,9 +18,10 @@ import subprocess
 
 # sanity check we're using Python3 (via Ghidrathon)
 assert sys.version_info < (3,0), "Incorrect Python version; expected Jython (2.7)."
+sys.path.append("/usr/local/lib/python3.8/dist-packages/corereveal/")
 
 # CoreReveal
-from corereveal.types import EmulationResults
+from corereveal_types import EmulationResults
 
 # Ghidra
 from ghidra.program.flatapi import FlatProgramAPI
@@ -33,15 +34,15 @@ from java.awt import Color
 BACKGROUND_COLOR = Color.PINK
 OUTPUT = "/tmp/results.pickel"
 
-def annotate_bss(program, variables: dict):
+def annotate_bss(program, variables):
     """ Add annotations to the current program detailing BSS values. """
     # @TODO!
 
-def annotate_posix_calls(program, posix_calls: dict):
+def annotate_posix_calls(program, posix_calls):
     """ Add annotations to the current program detailing POSIX call arguments. """
     # @TODO!
 
-def color_function_graph(program, blocks: set, offset: int):
+def color_function_graph(program, blocks, offset):
     """ Highlight the blocks encountered and display the Function Graph. """
     # get program listing for commenting
     listing = program.getListing()
