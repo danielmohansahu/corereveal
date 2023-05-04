@@ -15,16 +15,13 @@ from pathlib import Path
 from typing import Callable
 import dataclasses
 
-# Capstone
-from capstone import Cs, CS_MODE_ARM, CS_ARCH_ARM, CS_ARCH_X86, CS_MODE_64
-
 # Qiling
 from qiling import Qiling
-from qiling.const import QL_VERBOSE, QL_INTERCEPT, QL_ARCH
+from qiling.const import QL_VERBOSE, QL_INTERCEPT
 from qiling.extensions import pipe
 
-# hardcoded path to qiling rootfs - assuming x8664 linux for now
-ROOTFS_ROOT = Path("/mnt/rootfs")
+# CoreReveal
+from .types import EmulationResults
 
 class BasicBlock:
   def __init__(self, addr:int, size:int):
@@ -38,25 +35,14 @@ class BasicBlock:
   def rebase(self, offset:int):
     pass
 
-# data structure of results from Qiling
-@dataclasses.dataclass
-class EmulationResults:
-  # all addresses encountered
-  addresses:        set  = dataclasses.field(default_factory=set)
-  # basic block addresses encountered
-  block_addresses:  set  = dataclasses.field(default_factory=set)
-  # static variable values {variable : [values]}
-  static_variables: dict = dataclasses.field(default_factory=dict)
-  # arguments to posix calls {call : [(arg1, arg2, ..., argN)] }
-  posix_calls:      dict = dataclasses.field(default_factory=dict)
-
 class QilingInterface:
   """ Core Qiling Interface Class """
 
-  def __init__(self, program: str, bss_offset:int, bss_size:int, ghidra_base: int, stdin_cb: Callable[[], bytes]=None, stdout_cb: Callable[[bytes], None]=None):
+  def __init__(self, program: str, rootfs: str, bss_offset:int, bss_size:int, stdin_cb: Callable[[], bytes]=None, stdout_cb: Callable[[bytes], None]=None):
     """ Setup and initialization of underlying Qiling environment.
 
     :param program:     Full path to the program to execute.
+    :param rootfs:     Full path to the root file system the binary expects to execute in
     :param bss_offset:  The offset (i.e. base address == 0) where the .bss section is located at
     :param bss_size:    The size of the .bss section in bytes
     :param stdin_cb:    Callback executed when STDIN is requested.
@@ -69,38 +55,12 @@ class QilingInterface:
     self.bss_size    = bss_size
     self.stdin_cb    = stdin_cb
     self.stdout_cb   = stdout_cb
-    self.ghidra_base = ghidra_base
 
     # initialize other class variables
-    self.rootfs  = None
     self.results = None
-
-  def set_rootfs(self, rootfs: str):
-    """ Manually set a rootfs for emulation.
-    
-    :param: rootfs:   Full path to the root file system the binary expects to execute in
-    """
     self.rootfs = Path(rootfs)
     assert self.rootfs.is_dir(), f"Failed to locate required root filesystem '{self.rootfs.as_posix()}'"
 
-  def set_default_rootfs(self, arch: str, address_size: str, os: str="linux"):
-    """ Use a pre-installed rootfs (provided by qiling).
-    
-    :param arch:         Architecture of program to emulate.
-    :param address_size: Number of bits in addresses.
-    :param os:           Operating system of program to emulate.
-    """
-    # verify input operating system / arch
-    assert (os.lower() == "linux"), f"Unsupported operating system '{os}'; options are 'linux'"
-    assert hasattr(QL_ARCH, arch.upper()), f"Unsupported architecture '{arch}'; options are {QL_ARCH}"
-  
-    # access base rootfs - note the convention differences between Ghidra and Qiling
-    if int(address_size) == 64:
-      self.rootfs = ROOTFS_ROOT / f"{arch.lower()}{address_size}"
-    else:
-      self.rootfs = ROOTFS_ROOT / f"{arch.lower()}"
-    assert self.rootfs.is_dir(), f"Failed to locate required root filesystem '{self.rootfs.as_posix()}'"
-  
   def emulate(self, args:str="") -> EmulationResults:
     """
     Perform emulation and return the top-level execution trace / metadata.
@@ -109,9 +69,6 @@ class QilingInterface:
     
     :returns: an EmulationResults containing dynamically gather information
     """
-    # sanity check initialization
-    assert (self.rootfs is not None), "QilingInterface not initialized properly. Must set rootfs."
-  
     # initialize results
     self.results = EmulationResults()
 
@@ -162,7 +119,7 @@ class QilingInterface:
     '''
     assert (self.results is not None), "Emulation setup failed."
     if self.base_address <= address <= self.addr_uppr_bnd:
-      self.results.block_addresses.add(hex(address - self.base_address + self.ghidra_base))
+      self.results.block_addresses.add(hex(address - self.base_address))
 
   def _ql_hook_bss(self, ql, access, address, size, value):
     """ Memory writes in BSS section callback.

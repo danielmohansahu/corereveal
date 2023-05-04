@@ -47,8 +47,7 @@ def main() -> int:
 
     # construct core interface class
     print("Constructing interface...")
-    interface = QilingInterface(args.program.as_posix(), args.bss_offset, args.bss_size)
-    interface.set_rootfs(args.rootfs.as_posix())
+    interface = QilingInterface(args.program.as_posix(), args.rootfs.as_posix(), args.bss_offset, args.bss_size)
 
     # perform emulation
     print(f"Running emulation...")
