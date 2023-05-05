@@ -1,6 +1,6 @@
 # corereveal
 
-<img src="docs/CoreReveal.svg" alt="logo" width="300" height="200">
+<img src="docs/CoreReveal.svg" alt="logo" width="600" height="400">
 
 CoreReveal allows users to directly employ [Qiling](https://qiling.io/) emulation within the [Ghidra](https://ghidra-sre.org/) reverse engineering framework for binary analysis and introspection. During emulation the following data are collected:
 
