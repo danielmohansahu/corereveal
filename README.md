@@ -1,6 +1,6 @@
 # corereveal
 
-<img src="docs/CoreReveal.svg" alt="logo" width="600" height="400">
+<img src="docs/CoreReveal.svg" alt="logo" width="750" height="500">
 
 CoreReveal allows users to directly employ [Qiling](https://qiling.io/) emulation within the [Ghidra](https://ghidra-sre.org/) reverse engineering framework for binary analysis and introspection. During emulation the following data are collected:
 
@@ -36,16 +36,13 @@ Initial Configuration | Script Execution
 
 ## Execution Examples
 
-The following gifs demonstrate the usage of `CoreReveal` against a variety of different binary targets. To build the test binaries first run the following:
+The following gifs demonstrate the usage of `CoreReveal` against a variety of different binary targets. Before reproducing make sure to build the test binaries via `cd test && pytest`.
 
-```bash
-cd test
-pytest
-```
-
-`ini_reader` | `rng_guesser` | `sus`
---- | --- | ---
-![ini_reader example](docs/example-ini-reader.gif) | ![rng_guesser example](docs/example-rng-guesser.gif) | ![sus example](docs/example-sus.gif)
+Example | Recording
+--- | ---
+`ini_reader` | ![ini_reader example](docs/example-ini-reader.gif)
+`rng_guesser` | ![rng_guesser example](docs/example-rng-guesser.gif)
+`sus` | ![sus example](docs/example-sus.gif)
 
 ## Sequence Diagram
 
