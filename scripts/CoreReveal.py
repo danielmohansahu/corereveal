@@ -32,7 +32,18 @@ from java.awt import Color
 
 # Hardcoded global variables
 BACKGROUND_COLOR = Color.PINK
-OUTPUT = "/tmp/results.pickel"
+OUTPUT = "/tmp/corereveal_results.pkl"
+
+# mapping from Ghidra metadata to our architecture rootfs naming convention
+GHIDRA_ARCH_MAP = {
+    ("x86", "64"): "x8664",
+    ("arm", "32"): "arm",
+    ("arm", "64"): "arm64",
+    ("mips", "32"): "mips",
+    ("mips", "64"): "mips64",
+    # !! Unverified !! #
+    ("ppc", "64"): "ppc64",
+}
 
 def annotate_bss(program, variables):
     """ Add annotations to the current program detailing BSS values. """
@@ -58,10 +69,28 @@ def color_function_graph(program, blocks, offset):
             # add a comment too, if this is a valid CodeUnit
             code_unit = listing.getCodeUnitAt(address)
             if code_unit:
-                code_unit.setComment(code_unit.PLATE_COMMENT, "Background color set by CoreReveal")
-            print("Colored {}".format(hex_str))
+                code_unit.setComment(code_unit.PLATE_COMMENT, "CoreReveal: Execution path taken in last emulation.")
+            # print("Colored {}".format(hex_str))
         else:
             popup("Skipping invalid address {}!".format(hex_str))
+
+def communicate(process):
+    """ Interact with the given subprocess until it closes. """
+    # continually read newlines and prompt the user
+    while process.poll() is not None:
+        print("Before msg")
+        msg = process.stdout.readline().rstrip()
+        print("msg: " + msg)
+        response = askString(msg)
+        print("response: " + response)
+        process.stdin.write(response)
+        process.stdin.flush()
+
+    # get any final communication
+    stdout, stderr = process.communicate()
+    print(stdout)
+    print(stderr)
+    return process.returncode
 
 if __name__ == "__main__":
     # sanity check
@@ -75,6 +104,9 @@ if __name__ == "__main__":
 
     # extract current program metadata
     binary = program.getExecutablePath()
+    arch_config = (program.getMetadata().get("Processor").lower(), program.getMetadata().get("Address Size"))
+    assert arch_config in GHIDRA_ARCH_MAP, "Unsupported architecture configuration: {}".format(arch_config)
+    architecture = GHIDRA_ARCH_MAP[arch_config]
     mem_offset = int(program.getMetadata().get("Minimum Address"), 16)
 
     # prompt for user input
@@ -82,14 +114,18 @@ if __name__ == "__main__":
     cli_args = askString("Executing {}".format(binary), "Command Line Arguments")
 
     # set up subprocess call arguments
-    cmd = "corereveal {} --args {} --arch {} --bss-size {} --bss-offset {} --output {}".format(binary, cli_args, "UNKNOWN", 0, 0, OUTPUT)
-    print("Running command: \n  {}".format(cmd))
-    code = subprocess.call(cmd, shell=True)
+    cmd = "corereveal {} --arch {} --bss-size {} --bss-offset {} --output {}".format(binary, architecture, 0, 0, OUTPUT)
+    if len(cli_args.strip()) != 0:
+        cmd += " --args {}".format(cli_args)
 
-    # handle failure conditions
-    if code != 0:
+    print("Running command: \n  {}".format(cmd))
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+
+    # wait for completion and handle failure conditions
+    retcode = communicate(proc)
+    if retcode != 0:
        popup("Emulation failed!")
-       sys.exit(code)
+       sys.exit(retcode)
 
     # otherwise parse output
     print("Emulation succeeded; post-processing...")
@@ -97,7 +133,7 @@ if __name__ == "__main__":
     results.from_file(OUTPUT)
 
     # format output and visualize
-    annotate_bss(program, res.static_variables)
-    annotate_posix_calls(program, res.posix_calls)
-    color_function_graph(program, res.block_addresses, mem_offset)
+    annotate_bss(program, results.static_variables)
+    annotate_posix_calls(program, results.posix_calls)
+    color_function_graph(program, results.block_addresses, mem_offset)
     print("Success!")

@@ -24,7 +24,7 @@ class EmulationResults:
       data = {"block_addresses" : self.block_addresses,
               "static_variables" : self.static_variables,
               "posix_calls" : self.posix_calls}
-      pickle.dump(data, picklefile, pickle.HIGHEST_PROTOCOL)
+      pickle.dump(data, picklefile, 0)
 
   def from_file(self, filename):
     """ Deserialize from a pickle file. """
