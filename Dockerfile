@@ -19,11 +19,11 @@ RUN apt-get update \
 
 # construct a set of supported rootfs for emulation
 WORKDIR /mnt/rootfs
-RUN mkdir arm && debootstrap --foreign --arch armhf stable arm
-RUN mkdir arm64 && debootstrap --foreign --arch arm64 stable arm64
-RUN mkdir mips && debootstrap --foreign --arch mipsel stable mips
-RUN mkdir mips64 && debootstrap --foreign --arch mips64el stable mips64
-RUN mkdir ppc64 && debootstrap --foreign --arch ppc64el stable ppc64
+RUN mkdir arm && debootstrap --foreign --arch armhf --variant=buildd stable arm
+RUN mkdir arm64 && debootstrap --foreign --arch arm64 --variant=buildd stable arm64
+RUN mkdir mips && debootstrap --foreign --arch mipsel --variant=buildd stable mips
+RUN mkdir mips64 && debootstrap --foreign --arch mips64el --variant=buildd stable mips64
+RUN mkdir ppc64 && debootstrap --foreign --arch ppc64el --variant=buildd stable ppc64
 RUN mkdir x8664 && debootstrap stable x8664
 
 # change working dir for installation of downloadable packages
