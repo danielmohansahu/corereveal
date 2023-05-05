@@ -10,7 +10,7 @@ import random
 from typing import Callable
 
 # CoreReveal
-from .qiling_interface import QilingInterface, EmulationResults
+from .qiling_interface import EmulationResults
 
 def generate_random_addresses(start: str, end_offset: int = 2048, count: int = 150):
     """ Generate 'count' random addresses in the range ['start', 'start' + 'end_offset'] """
@@ -39,18 +39,18 @@ class MockQilingInterface:
         if random.random() > 0.5:
             stdin_cb("How are you feeling?")
         stdout_cb("I understand.")
-        
+
         # loop until desired time is up
         st = time.time()
-        while (time.time() - st < duration):
+        while time.time() - st < duration:
             # maybe we need more user input
             if random.random() > 0.9:
                 stdin_cb("Please provide additional input")
-            
-            # it's more likely that we just spam 
+
+            # it's more likely that we just spam
             if random.random() > 0.75:
                 stdout_cb("SPAM!")
-            
+
             # sleep
             time.sleep(random.random())
 
@@ -58,7 +58,7 @@ class MockQilingInterface:
         if random.random() < 0.05:
             stdout_cb("SEGFAULT")
             return None
-        
+
         # otherwise, populate random results
         results = EmulationResults()
 
