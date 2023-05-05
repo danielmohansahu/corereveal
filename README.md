@@ -5,14 +5,9 @@ Leveraging [Qiling](https://qiling.io/) and [Ghidra](https://ghidra-sre.org/) fo
 
 ## Development Environment
 
-A [Docker](https://www.docker.com/) development environment is provided for those who wish to use it. Users should carefully weight the benefits of isolation vs. the pains of containerization before using it. Note that this assumes an existing Docker installation on a modern version of Ubuntu with common system tools installed.
+A [Docker](https://www.docker.com/) development environment is provided for demonstration purposes.
 
-Docker installation verification:
-
-```bash
-# note this should work without root privileges (sudo)
-docker run hello-world
-```
+Note that this assumes an existing Docker installation on a modern version of Ubuntu with common system tools installed. Make sure `docker run hello-world` succeeds on your machine before continuing.
 
 Additional dependencies:
 
@@ -22,12 +17,24 @@ python3 -m pip install rocker
 
 **Instructions:**
 1. Build Docker image and drop into an interactive container via `./build_and_run.sh`
-2. Start Ghidra via `ghidraRun`
-3. (one-time-only) install Ghidrathon extension; restart
-4. (one-time-only) disable native (Jython) Python support; restart
-5. Open a project and begin analysis
+2. Start Ghidra via `ghidraRun` abd perform Ghidra initialization (new project, etc.) - see [the docs](https://ghidra-sre.org/) for more information.
+3. Execute the CoreReveal Ghidra script on a loaded binary.
 
 Initial Configuration | Script Execution
 --- | ---
 ![example startup](docs/container-startup.gif) | ![example execute](docs/running-corereveal.gif)
+
+
+## Execution Examples
+
+The following gifs demonstrate the usage of `CoreReveal` against a variety of different binary targets. To build the test binaries first run the following:
+
+```bash
+cd test
+pytest
+```
+
+`ini_reader` | `rng_guesser` | `sus`
+--- | --- | ---
+![ini_reader example](docs/example-ini-reader.gif) | ![rng_guesser example](docs/example-rng-guesser.gif) | ![sus example](docs/example-sus.gif)
 
