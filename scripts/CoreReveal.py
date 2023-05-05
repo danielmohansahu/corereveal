@@ -54,6 +54,17 @@ def get_code_unit(program, addr, offset):
             return code_unit
     return None
 
+def get_bss_block(program):
+    """ Heuristics to determine the BSS block in Ghidra. """
+    print([c for c in program.symbolTable.getDefinedSymbols()])
+
+    for option in ("__bss_start", "__bss_start__"):
+        bss_start = program.symbolTable.getGlobalSymbols(option)
+        if len(bss_start) != 0:
+            return program.getMemory().getBlock(bss_start[0].getAddress())
+    # Failed!
+    return None
+
 def annotate_bss(program, variables, offset):
     """ Add annotations to the current program detailing BSS values. """
     # iterate through results
@@ -116,9 +127,8 @@ if __name__ == "__main__":
     mem_offset = int(program.getMetadata().get("Minimum Address"), 16)
 
     # determine BSS section location and size
-    bss_start = program.symbolTable.getGlobalSymbols("__bss_start")[0].getAddress()
-    bss_memory = program.getMemory().getBlock(bss_start)
-    assert bss_start == bss_memory.start, "Error in determination of BSS start!"
+    bss_memory = get_bss_block(program)
+    assert bss_memory, "Error in determination of BSS start!"
 
     # prompt for user input
     print("Emulating {} with Qiling...".format(binary))
@@ -126,7 +136,7 @@ if __name__ == "__main__":
 
     # set up subprocess call arguments
     cmd = "corereveal {} --arch {} --bss-offset {} --bss-size {} --output {}".format(
-        binary, architecture, bss_start.offset - mem_offset, bss_memory.size, OUTPUT)
+        binary, architecture, bss_memory.start.offset - mem_offset, bss_memory.size, OUTPUT)
     if len(cli_args.strip()) != 0:
         cmd += " --args {}".format(cli_args)
 
