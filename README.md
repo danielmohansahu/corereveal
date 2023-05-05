@@ -1,7 +1,16 @@
-REPOSITORY UNDER DEVELOPMENT!
-
 # corereveal
-Leveraging [Qiling](https://qiling.io/) and [Ghidra](https://ghidra-sre.org/) for binary analysis.
+
+<img src="docs/CoreReveal.svg" alt="logo" width="300" height="200">
+
+CoreReveal allows users to directly employ [Qiling](https://qiling.io/) emulation within the [Ghidra](https://ghidra-sre.org/) reverse engineering framework for binary analysis and introspection. During emulation the following data are collected:
+
+Information | Description
+--- | ---
+Basic Block Addresses | Addresses of Basic Blocks executed during emulation - the executed control flow.
+BSS Symbol Values | The value(s) assigned to global variables present in the binary's `.bss` section.
+POSIX Call Arguments | Arguments passed to supported POSIX calls like `read` / `write`.
+
+This information is displayed directly in Ghidra via code unit coloring and comments to supplement static analysis with dynamically executed emulation results.
 
 ## Development Environment
 
@@ -38,3 +47,8 @@ pytest
 --- | --- | ---
 ![ini_reader example](docs/example-ini-reader.gif) | ![rng_guesser example](docs/example-rng-guesser.gif) | ![sus example](docs/example-sus.gif)
 
+## Sequence Diagram
+
+The following sequence diagram illustrates the typical workflow's fine-grained execution path:
+
+![sequence diagram](docs/uml/sequence.png)

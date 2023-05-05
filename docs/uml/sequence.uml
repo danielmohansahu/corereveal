@@ -1,0 +1,58 @@
+@startuml
+
+' declare core components
+actor User
+participant Ghidra
+participant "CoreReveal Script (Py2.7)" as CoreReveal
+participant "corereveal Module (Py3.8)" as corereveal
+participant Qiling
+
+' nominal Ghidra initialization
+User -> Ghidra: Import Binary
+activate Ghidra
+User <- Ghidra: Imported
+deactivate Ghidra
+User -> Ghidra: Analyze Binary
+activate Ghidra
+User <- Ghidra: Analyzed
+deactivate Ghidra
+
+' User-triggered CoreReveal Script execution
+User -> Ghidra: Execute CoreReveal Script
+activate Ghidra
+Ghidra -> CoreReveal: Execute CoreReveal Script
+activate CoreReveal
+
+' CoreReveal script - Ghidra side execution
+CoreReveal -> CoreReveal: Determine ROOTFS
+CoreReveal -> CoreReveal: Construct subprocess command
+
+' Trigger corereveal module emulation
+CoreReveal -> corereveal: Execute subprocess
+activate corereveal
+
+' perform core emulation
+corereveal -> Qiling: Emulate Binary
+activate Qiling
+corereveal <- Qiling: Emulation Complete
+deactivate Qiling
+
+' Indicate subprocess success / failure
+corereveal -> corereveal: Save results to disk
+CoreReveal <- corereveal: retcode
+deactivate corereveal
+
+' Parse and interpret results
+CoreReveal -> CoreReveal: Load and parse results
+CoreReveal -> Ghidra: Color Basic Block addresses
+CoreReveal -> Ghidra: Comment BSS symbol values
+CoreReveal -> Ghidra: Comment POSIX call arguments
+
+' Indicate completion
+Ghidra <- CoreReveal: Emulation Complete
+deactivate CoreReveal
+User <- Ghidra: Emulation Complete
+deactivate Ghidra
+
+@enduml
+
