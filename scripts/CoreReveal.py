@@ -45,9 +45,35 @@ GHIDRA_ARCH_MAP = {
     ("ppc", "64"): "ppc64",
 }
 
-def annotate_bss(program, variables):
+def get_code_unit(program, addr, offset):
+    """ Convenience function to return the code unit at a given address. """
+    address = program.getMinAddress().getAddress(hex(int(addr, 16) + offset))
+    if address:
+        code_unit = program.getListing().getCodeUnitAt(address)
+        if code_unit:
+            return code_unit
+    return None
+
+def get_bss_block(program):
+    """ Heuristics to determine the BSS block in Ghidra. """
+    print([c for c in program.symbolTable.getDefinedSymbols()])
+
+    for option in ("__bss_start", "__bss_start__"):
+        bss_start = program.symbolTable.getGlobalSymbols(option)
+        if len(bss_start) != 0:
+            return program.getMemory().getBlock(bss_start[0].getAddress())
+    # Failed!
+    return None
+
+def annotate_bss(program, variables, offset):
     """ Add annotations to the current program detailing BSS values. """
-    # @TODO!
+    # iterate through results
+    for addr,values in variables.items():
+        code_unit = get_code_unit(program, addr, offset)
+        if code_unit:
+            # location found - set comment
+            code_unit.setComment(code_unit.POST_COMMENT,
+                                 "CoreReveal: This symbol had values {}".format(values))
 
 def annotate_posix_calls(program, posix_calls):
     """ Add annotations to the current program detailing POSIX call arguments. """
@@ -55,24 +81,11 @@ def annotate_posix_calls(program, posix_calls):
 
 def color_function_graph(program, blocks, offset):
     """ Highlight the blocks encountered and display the Function Graph. """
-    # get program listing for commenting
-    listing = program.getListing()
-
-    # convert list of address strings to address objects
-    start = program.getMinAddress()
-    for hex_str in blocks:
-        # offset string by ghidra's "entry point"
-        address = start.getAddress(hex(int(hex_str, 16) + offset))
-        if address:
-            # address found; set background
-            setBackgroundColor(address, BACKGROUND_COLOR)
-            # add a comment too, if this is a valid CodeUnit
-            code_unit = listing.getCodeUnitAt(address)
-            if code_unit:
-                code_unit.setComment(code_unit.PLATE_COMMENT, "CoreReveal: Execution path taken in last emulation.")
-            # print("Colored {}".format(hex_str))
-        else:
-            popup("Skipping invalid address {}!".format(hex_str))
+    # iterate through traversed addresses
+    for addr in blocks:
+        code_unit = get_code_unit(program, addr, offset)
+        if code_unit:
+            code_unit.setComment(code_unit.PLATE_COMMENT, "CoreReveal: Execution path taken in last emulation.")
 
 def communicate(process):
     """ Interact with the given subprocess until it closes. """
@@ -102,19 +115,28 @@ if __name__ == "__main__":
     program = getState().getCurrentProgram()
     monitor = ConsoleTaskMonitor()
 
-    # extract current program metadata
+    # determine current program fullpath
     binary = program.getExecutablePath()
+
+    # determine current program architecture configuration (processor and address size)
     arch_config = (program.getMetadata().get("Processor").lower(), program.getMetadata().get("Address Size"))
     assert arch_config in GHIDRA_ARCH_MAP, "Unsupported architecture configuration: {}".format(arch_config)
     architecture = GHIDRA_ARCH_MAP[arch_config]
+
+    # determine the memory address used as the Ghidra starting point
     mem_offset = int(program.getMetadata().get("Minimum Address"), 16)
+
+    # determine BSS section location and size
+    bss_memory = get_bss_block(program)
+    assert bss_memory, "Error in determination of BSS start!"
 
     # prompt for user input
     print("Emulating {} with Qiling...".format(binary))
     cli_args = askString("Executing {}".format(binary), "Command Line Arguments")
 
     # set up subprocess call arguments
-    cmd = "corereveal {} --arch {} --bss-size {} --bss-offset {} --output {}".format(binary, architecture, 0, 0, OUTPUT)
+    cmd = "corereveal {} --arch {} --bss-offset {} --bss-size {} --output {}".format(
+        binary, architecture, bss_memory.start.offset - mem_offset, bss_memory.size, OUTPUT)
     if len(cli_args.strip()) != 0:
         cmd += " --args {}".format(cli_args)
 
@@ -133,7 +155,7 @@ if __name__ == "__main__":
     results.from_file(OUTPUT)
 
     # format output and visualize
-    annotate_bss(program, results.static_variables)
+    annotate_bss(program, results.static_variables, mem_offset)
     annotate_posix_calls(program, results.posix_calls)
     color_function_graph(program, results.block_addresses, mem_offset)
     print("Success!")

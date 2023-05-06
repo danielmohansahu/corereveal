@@ -6,7 +6,7 @@ to support Ghidra's native Jython interpreter and modern Python3.
 
 # STL
 import pickle
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 # data structure of results from emulation
 class EmulationResults:
@@ -14,7 +14,7 @@ class EmulationResults:
     # basic block addresses encountered
     self.block_addresses = set()
     # static variable values
-    self.static_variables = dict()
+    self.static_variables = defaultdict(list)
     # arguments to posix calls
     self.posix_calls = dict()
 

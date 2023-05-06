@@ -50,7 +50,7 @@ def main() -> int:
     interface = QilingInterface(args.program.as_posix(), args.rootfs.as_posix(), args.bss_offset, args.bss_size)
 
     # perform emulation
-    print(f"Running emulation...")
+    print("Running emulation...")
     if results := interface.emulate(args.args):
         print(f"Emulation succeeded - saving results to {args.output.as_posix()}.")
         results.to_file(args.output.as_posix())
