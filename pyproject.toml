@@ -22,6 +22,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.scripts]
+corereveal = "corereveal.cli:main"
+
 [project.urls]
 "Homepage" = "https://github.com/danielmohansahu/corereveal"
 "Bug Tracker" = "https://github.com/danielmohansahu/corereveal/issues"
