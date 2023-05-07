@@ -20,7 +20,6 @@ from qiling import Qiling
 from qiling.const import QL_VERBOSE, QL_INTERCEPT
 from qiling.extensions import pipe
 from qiling.os.const import *
-from qiling.os.posix import syscall
 
 # CoreReveal
 from .corereveal_types import EmulationResults, FunctionCall
@@ -70,7 +69,7 @@ class QilingInterface:
     self.addr_uppr_bnd = None
     self.current_func_call = None 
 
-  def emulate(self, args:str="") -> EmulationResults:
+  def emulate(self, args:str="", stdin:bytes=b"") -> EmulationResults:
     """
     Perform emulation and return the top-level execution trace / metadata.
 
@@ -86,8 +85,8 @@ class QilingInterface:
     print(f"Executing `{' '.join(argv)}` with rootfs {self.rootfs.as_posix()}")
     self.ql = Qiling(argv, self.rootfs.as_posix(), console=False, log_plain=True)
 
-    # @TODO take over STDIN / STDOUT
-    # self.ql.os.stdin = pipe.SimpleInStream(sys.stdin.fileno())  # take over the input to the program using a fake stdin
+    self.ql.os.stdin = pipe.SimpleInStream(0)  # take over the input to the program using a fake stdin
+    self.ql.os.stdin.write(stdin)
     # self.ql.os.stdout = pipe.NullOutStream(sys.stdout.fileno()) # disregard program output
     
     # Determine Base Address and an Upper Bound address for the binary's text section    
