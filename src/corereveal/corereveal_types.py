@@ -8,6 +8,23 @@ to support Ghidra's native Jython interpreter and modern Python3.
 import pickle
 from collections import namedtuple
 
+class FunctionCall:
+  def __init__(self, name:str, address:int, return_value:int, **func_args):
+    """
+    Represents a call to a function that has executed
+    :param address: The address the function was called at (i.e. address of the CALL op code)
+    :param return_value: The value of the function's return value
+    :param args: The list of arguments passed into the function in the positional order expected in the call
+    """
+    self.name = name
+    self.address = address
+    self.ret = return_value
+    self.args = func_args
+
+  def __str__(self):
+    args = ", ".join([f"{param}={value}" for param, value in self.args.items()])
+    return f"{hex(self.address)}: {self.name}({args}) = {self.ret}"
+
 # data structure of results from emulation
 class EmulationResults:
   def __init__(self):
@@ -16,7 +33,7 @@ class EmulationResults:
     # static variable values
     self.static_variables = dict()
     # arguments to posix calls
-    self.posix_calls = dict()
+    self.posix_calls = list()
 
   def to_file(self, filename):
     """ Serialize to a pickle file. """
