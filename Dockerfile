@@ -49,7 +49,7 @@ WORKDIR /tmp/corereveal
 RUN python3 -m pip install --upgrade pip pylint pytest
 COPY . .
 RUN python3 -m pip install -e .
-# RUN python3 -m pylint corereveal
+RUN python3 -m pylint corereveal
 
 # move Ghidrathon extensions and our custom scripts into Ghidra installation (for easy access)
 COPY scripts/CoreReveal.py $GHIDRA_INSTALL_DIR/Ghidra/Features/Python/ghidra_scripts/

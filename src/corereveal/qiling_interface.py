@@ -59,13 +59,16 @@ class QilingInterface:
     self.bss_size    = bss_size
     self.stdin_cb    = stdin_cb
     self.stdout_cb   = stdout_cb
-
-    # initialize other class variables
-    self.results = None
     self.rootfs = Path(rootfs)
     assert self.rootfs.is_dir(), f"Failed to locate required root filesystem '{self.rootfs.as_posix()}'"
 
-    self.current_func_call = None
+    
+    # initialize other class variables
+    self.results       = None
+    self.ql            = None
+    self.base_address  = None
+    self.addr_uppr_bnd = None
+    self.current_func_call = None 
 
   def emulate(self, args:str="") -> EmulationResults:
     """
@@ -95,13 +98,13 @@ class QilingInterface:
     ####################
     # Basic Block Hook #
     ####################
-    self.ql.hook_block(self._ql_hook_block_disasm)
+    self.ql.hook_block(self._ql_hook_block)
 
     ####################
     #  BSS Write Hook  #
     ####################
     bss_start = self.base_address + self.bss_addr
-    bss_end = bss_start = self.bss_size
+    bss_end = bss_start + self.bss_size
     self.ql.hook_mem_write(self._ql_hook_bss, begin=bss_start, end=bss_end)
 
     ####################
@@ -122,7 +125,7 @@ class QilingInterface:
 
     return self.results
   
-  def _ql_hook_block_disasm(self, ql, address, size):
+  def _ql_hook_block(self, ql, address, size):
     ''' Basic Block entry callback.
 
     Note: We constrain functionality based on whether or not the basic block's
@@ -137,8 +140,7 @@ class QilingInterface:
     """ Memory writes in BSS section callback.
     """
     assert (self.results is not None), "Emulation setup failed."
-    # TODO
-    pass
+    self.results.static_variables[hex(address - self.base_address)].append(value)
 
   def _ql_syscall_get_ret(self, ql):
     """ POSIX syscall callback.
