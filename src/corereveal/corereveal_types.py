@@ -9,7 +9,7 @@ import pickle
 from collections import namedtuple, defaultdict
 
 class FunctionCall:
-  def __init__(self, name:str, address:int, return_value:int, **func_args):
+  def __init__(self, name, address, return_value, **func_args):
     """
     Represents a call to a function that has executed
     :param address: The address the function was called at (i.e. address of the CALL op code)
@@ -22,8 +22,8 @@ class FunctionCall:
     self.args = func_args
 
   def __str__(self):
-    args = ", ".join([f"{param}={value}" for param, value in self.args.items()])
-    return f"{hex(self.address)}: {self.name}({args}) = {self.ret}"
+    args = ", ".join(["{}={}".format(param,value) for param, value in self.args.items()])
+    return "{}: {}({}) = {}".format(hex(self.address), self.name, args, self.ret)
 
 # data structure of results from emulation
 class EmulationResults:
