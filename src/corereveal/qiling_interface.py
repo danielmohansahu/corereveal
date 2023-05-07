@@ -19,9 +19,13 @@ import dataclasses
 from qiling import Qiling
 from qiling.const import QL_VERBOSE, QL_INTERCEPT
 from qiling.extensions import pipe
+from qiling.os.const import *
+from qiling.os.posix import syscall
 
 # CoreReveal
-from .corereveal_types import EmulationResults
+from .corereveal_types import EmulationResults, FunctionCall
+
+MAX_RECORD_SIZE = 32
 
 class BasicBlock:
   def __init__(self, addr:int, size:int):
@@ -58,12 +62,13 @@ class QilingInterface:
     self.rootfs = Path(rootfs)
     assert self.rootfs.is_dir(), f"Failed to locate required root filesystem '{self.rootfs.as_posix()}'"
 
+    
     # initialize other class variables
     self.results       = None
     self.ql            = None
     self.base_address  = None
     self.addr_uppr_bnd = None
-
+    self.current_func_call = None 
 
   def emulate(self, args:str="") -> EmulationResults:
     """
@@ -106,10 +111,16 @@ class QilingInterface:
     # POSIX Call Hooks #
     ####################
     # open/openat
-    self.ql.os.set_syscall('openat', self._ql_syscall_openat, QL_INTERCEPT.EXIT)
+    
+    self.ql.os.set_api('open', self._ql_syscall_open_ENTER, QL_INTERCEPT.ENTER)
+    self.ql.os.set_api('open', self._ql_syscall_get_ret, QL_INTERCEPT.EXIT)
     # read
+    self.ql.os.set_api('read', self._ql_syscall_read_ENTER, QL_INTERCEPT.ENTER)
+    self.ql.os.set_api('read', self._ql_syscall_get_ret, QL_INTERCEPT.EXIT)
+    # write 
+    self.ql.os.set_api('write', self._ql_syscall_write_ENTER, QL_INTERCEPT.ENTER)
+    self.ql.os.set_api('write', self._ql_syscall_get_ret, QL_INTERCEPT.EXIT)
 
-    # write
     self.ql.run()
 
     return self.results
@@ -131,7 +142,40 @@ class QilingInterface:
     assert (self.results is not None), "Emulation setup failed."
     self.results.static_variables[hex(address - self.base_address)].append(value)
 
-  def _ql_syscall_openat(self, ql, dirfd:int, pathname:str, flags:int, mode:int, ret):
+  def _ql_syscall_get_ret(self, ql):
     """ POSIX syscall callback.
     """
     assert (self.results is not None), "Emulation setup failed."
+    self.current_func_call.ret = ql.os.fcall.cc.getReturnValue()
+    self.results.posix_calls.append(self.current_func_call)
+
+  def _ql_syscall_open_ENTER(self, ql):
+    assert (self.results is not None), "Emulation setup failed."
+    print("[+] Recording open()")
+    address = ql.arch.regs.arch_pc - self.base_address
+    params = ql.os.resolve_fcall_params({"pathname": STRING, "flags":INT, "mode":INT})
+    self.current_func_call = FunctionCall("open", address, None, **params)
+
+  def _ql_syscall_read_ENTER(self, ql):
+    assert (self.results is not None), "Emulation setup failed."
+    print("[+] Recording read()")
+    address = ql.arch.regs.arch_pc - self.base_address
+
+    # Since buf is just a pointer it is more useful to see the data at the pointer
+    params = ql.os.resolve_fcall_params({"fd": INT, "buf":POINTER, "size_t": SIZE_T})
+
+    # Get the file descriptor; save off the current position, read some data off, seek back to the original position
+    fd = ql.os.fd[params['fd']]
+    pos = fd.tell()
+    buffer_data = fd.read(min(params['size_t'], MAX_RECORD_SIZE))
+    fd.seek(pos)
+
+    params['buf'] = buffer_data
+    self.current_func_call = FunctionCall("read", address, None, **params)
+
+  def _ql_syscall_write_ENTER(self, ql):
+    assert (self.results is not None), "Emulation setup failed."
+    print("[+] Recording write()")
+    address = ql.arch.regs.arch_pc - self.base_address
+    params = ql.os.resolve_fcall_params({"fd": INT, "buf":POINTER, "size_t": SIZE_T})
+    self.current_func_call = FunctionCall("write", address, None, **params)
