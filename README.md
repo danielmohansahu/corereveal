@@ -36,7 +36,7 @@ Initial Configuration | Script Execution
 
 ## Execution Examples
 
-The following gifs demonstrate the usage of `CoreReveal` against a variety of different binary targets. Before reproducing make sure to build the test binaries via `cd test && pytest`.
+The following gifs demonstrate the usage of `CoreReveal` against a variety of different binary targets. Before reproducing make sure to build the test binaries via `cd test && pytest -s`.
 
 Example | Recording
 --- | ---
