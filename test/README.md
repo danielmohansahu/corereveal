@@ -1,6 +1,6 @@
 # Testing
 
-Tests setup for this project use `pytest`. To run all tests simply run `$ pytest`
+Tests setup for this project use `pytest`. To run all tests simply run `$ pytest -s`
 
 ## Dependencies
 * python

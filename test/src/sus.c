@@ -3,10 +3,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define NUM_FILES 7
+#define NUM_FILES 4
 #define BUFF_SIZE 4096
 
-const char* files [] = {"/etc/passwd", "/etc/shadow", "/etc/crontab", "/etc/groups", "/etc/hosts", "/proc/version", "/proc/mounts"};
+const char* files [] = {"/etc/passwd", "/etc/shadow", "/etc/crontab", "/etc/hosts"};
 
 int main(int argc, char** argv)
 {
