@@ -16,7 +16,7 @@ def _get_info(prog_name):
             if not (entry.state is None):
                 debug_info.append((entry.state.address, entry.state.line, src[entry.state.line-1]))
 
-def rng_bb_test():
+def test_rng_bb():
     base_addr = 0
     basic_blocks = []
     debug_info = _get_info("rng_guesser")

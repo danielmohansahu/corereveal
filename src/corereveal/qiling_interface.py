@@ -24,7 +24,7 @@ from qiling.os.const import *
 # CoreReveal
 from .corereveal_types import EmulationResults, FunctionCall
 
-MAX_RECORD_SIZE = 32
+MAX_RECORD_SIZE = 4096
 
 class BasicBlock:
   def __init__(self, addr:int, size:int):
@@ -177,4 +177,9 @@ class QilingInterface:
     print("[+] Recording write()")
     address = ql.arch.regs.arch_pc - self.base_address
     params = ql.os.resolve_fcall_params({"fd": INT, "buf":POINTER, "size_t": SIZE_T})
+
+    # Get data at buf
+    data = ql.mem.read(params['buf'], params['size_t'])
+    params['buf'] = data
+
     self.current_func_call = FunctionCall("write", address, None, **params)
